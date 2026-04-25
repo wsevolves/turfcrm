@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Turf Booking Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-attachment: fixed;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Login Screen */
+    .login-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(30, 41, 59, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(10px);
+    }
+
+    .login-screen.hidden {
+      display: none;
+    }
+
+    .login-box {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #1e293b;
+    }
+
+    .role-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .role-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .role-btn.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 30px rgba(0,0,0,0.2);
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 28px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-header h2 i {
+      color: #667eea;
+    }
+
+    .nav-menu {
+      flex: 1;
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      padding: 12px 18px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 500;
+      color: #cbd5e1;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-item i {
+      width: 22px;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-item:hover:not(.active) {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .logout-btn {
+      margin: 20px 12px;
+      padding: 12px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+    }
+
+    .admin-badge {
+      padding: 18px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      color: #f1f5f9;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 200;
+      background: rgba(30, 41, 59, 0.9);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* Main */
+    .main-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 24px 30px;
+      background: rgba(248, 250, 252, 0.95);
+      backdrop-filter: blur(20px);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Customer View */
+    .customer-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .customer-header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(0,0,0,0.05);
+      transition: 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    }
+
+    .stat-info h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .stat-info .number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #667eea20, #764ba220);
+      padding: 16px;
+      border-radius: 16px;
+      color: #667eea;
+      font-size: 1.8rem;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary { 
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white; 
+    }
+    .btn-success { 
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white; 
+    }
+    .btn-warning { 
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: white; 
+    }
+    .btn-danger { 
+      background: #dc2626; 
+      color: white; 
+    }
+    .btn-outline { 
+      border: 2px solid #e2e8f0; 
+      background: white; 
+      color: #1e293b; 
+    }
+    .btn-sm { 
+      padding: 6px 14px; 
+      font-size: 0.85rem; 
+    }
+
+    .payment-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .payment-pending { background: #fef3c7; color: #92400e; }
+    .payment-done { background: #dcfce7; color: #15803d; }
+    .payment-advance { background: #dbeafe; color: #1e40af; }
+
+    .booking-table-wrapper {
+      background: white;
+      border-radius: 20px;
+      padding: 5px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    th {
+      text-align: left;
+      padding: 16px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #64748b;
+      text-transform: uppercase;
+      background: #f8fafc;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-top: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    .countdown {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .countdown-active { background: #dbeafe; color: #1e40af; }
+    .countdown-warning { background: #fef3c7; color: #92400e; }
+    .countdown-expired { background: #fee2e2; color: #dc2626; animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+      padding: 20px;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      border-radius: 24px;
+      padding: 28px;
+      width: 600px;
+      max-width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      transition: 0.3s;
+      background: #f8fafc;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group { flex: 1; }
+
+    .product-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 2px solid #e2e8f0;
+      flex-wrap: wrap;
+    }
+
+    .product-item select, .product-item input {
+      padding: 8px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+    }
+
+    .total-section {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-weight: 600;
+    }
+
+    .total-row.grand-total {
+      border-top: 2px solid #059669;
+      margin-top: 8px;
+      padding-top: 12px;
+      font-size: 1.1rem;
+      color: #059669;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        z-index: 150;
+        transition: left 0.3s ease;
+      }
+
+      .sidebar.active {
+        left: 0;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .main-panel {
+        padding: 16px;
+        padding-top: 80px;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .stat-card {
+        padding: 16px;
+      }
+
+      .stat-info .number {
+        font-size: 1.5rem;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .section-header h2 {
+        font-size: 1.2rem;
+      }
+
+      .customer-header {
+        padding: 20px;
+      }
+
+      .customer-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .modal-content {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+      }
+
+      .product-item {
+        flex-direction: column;
+      }
+
+      .product-item select,
+      .product-item input {
+        width: 100%;
+      }
+
+      table {
+        min-width: 600px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 24px;
+      }
+
+      .stat-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+      }
+
+      .stat-icon {
+        font-size: 1.5rem;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h2><i class="fas fa-futbol"></i> Turf Booking</h2>
+      <div class="role-selector">
+        <button class="role-btn active" onclick="selectRole('admin')">Admin</button>
+        <button class="role-btn" onclick="selectRole('customer')">Customer</button>
+      </div>
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="text" id="loginMobile" class="form-control" placeholder="Enter mobile number">
+      </div>
+      <div class="form-group" id="adminPasswordGroup">
+        <label>Password</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="Admin password">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="login()">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </button>
+      <p style="text-align:center;margin-top:12px;color:#64748b;font-size:0.85rem;">
+        Admin: any number + password "admin"<br>Customer: enter your mobile number
+      </p>
+    </div>
+  </div>
+
+  <!-- Admin Sidebar -->
+  <div class="sidebar" id="adminSidebar" style="display:none;">
+    <div class="sidebar-header">
+      <h2><i class="fas fa-futbol"></i> TurfAdmin</h2>
+    </div>
+    <div class="nav-menu">
+      <div class="nav-item active" data-view="dashboard"><i class="fas fa-th-large"></i> Dashboard</div>
+      <div class="nav-item" data-view="categories"><i class="fas fa-tags"></i> Categories</div>
+      <div class="nav-item" data-view="products"><i class="fas fa-shopping-basket"></i> Products</div>
+      <div class="nav-item" data-view="bookings"><i class="fas fa-list-alt"></i> All Bookings</div>
+    </div>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <div class="admin-badge">
+      <i class="fas fa-user-shield"></i>
+      <div><strong>Admin</strong><br><small>Full Access</small></div>
+    </div>
+  </div>
+
+  <!-- Customer Sidebar -->
+  <div class="sidebar" id="customerSidebar" style="display:none;">
+    <div class="sidebar-header">
+      <h2><i class="fas fa-futbol"></i> My Bookings</h2>
+    </div>
+    <div class="nav-menu">
+      <div class="nav-item active" data-view="myBookings"><i class="fas fa-calendar-check"></i> My Bookings</div>
+      <div class="nav-item" data-view="newBooking"><i class="fas fa-plus-circle"></i> New Booking</div>
+    </div>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <div class="admin-badge" id="customerInfo">
+      <i class="fas fa-user"></i>
+      <div><strong>Customer</strong><br><small id="customerMobile"></small></div>
+    </div>
+  </div>
+
+  <!-- Main Panel -->
+  <div class="main-panel" id="mainPanel"></div>
+
+  <!-- Category Modal -->
+  <div class="modal" id="categoryModal">
+    <div class="modal-content">
+      <h3 id="categoryModalTitle">Add Category</h3>
+      <div class="form-group"><label>Name</label><input type="text" id="catName" class="form-control" placeholder="Category name"></div>
+      <div class="form-group"><label>Description</label><textarea id="catDesc" class="form-control" rows="2" placeholder="Brief description"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Price/Hour (₹)</label><input type="number" id="catPrice" class="form-control" value="1000"></div>
+        <div class="form-group"><label>Max Players</label><input type="number" id="catPlayers" class="form-control" value="10"></div>
+      </div>
+      <input type="hidden" id="catEditId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-outline" onclick="closeModal('categoryModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCategory()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Modal -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <h3 id="productModalTitle">Add Product</h3>
+      <div class="form-group"><label>Product Name</label><input type="text" id="prodName" class="form-control" placeholder="Product name"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Price (₹)</label><input type="number" id="prodPrice" class="form-control" value="50"></div>
+        <div class="form-group"><label>Stock</label><input type="number" id="prodStock" class="form-control" value="100"></div>
+      </div>
+      <input type="hidden" id="prodEditId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-outline" onclick="closeModal('productModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProduct()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Modal -->
+  <div class="modal" id="bookingModal">
+    <div class="modal-content">
+      <h3 id="bookingModalTitle">New Booking</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Customer Name</label><input type="text" id="bkName" class="form-control" placeholder="Full name"></div>
+        <div class="form-group"><label>Mobile Number</label><input type="text" id="bkMobile" class="form-control" placeholder="Mobile number"></div>
+      </div>
+      <div class="form-group">
+        <label>Turf Category</label>
+        <select id="bkCategory" class="form-control" onchange="onBookingCategoryChange()">
+          <option value="">Select category</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Hours</label><input type="number" id="bkHours" class="form-control" value="1" min="0.5" step="0.5" onchange="calculateTotal()"></div>
+        <div class="form-group"><label>Price/Hour (₹)</label><input type="number" id="bkPriceHr" class="form-control" readonly></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Time</label><input type="datetime-local" id="bkStart" class="form-control"></div>
+        <div class="form-group"><label>End Time</label><input type="datetime-local" id="bkEnd" class="form-control"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="bkPaymentMethod" class="form-control">
+            <option value="pending">Pending</option>
+            <option value="upi">UPI</option>
+            <option value="cash">Cash</option>
+            <option value="advance">Advance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Payment Status</label>
+          <select id="bkPaymentStatus" class="form-control">
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
+            <option value="advance">Advance Paid</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Additional Products</label>
+        <div id="productsList"></div>
+        <button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="addProductRow()">
+          <i class="fas fa-plus"></i> Add Product
+        </button>
+      </div>
+      <div class="total-section">
+        <div class="total-row"><span>Turf Charges:</span><span id="turfTotal">₹0</span></div>
+        <div class="total-row"><span>Products Total:</span><span id="productsTotal">₹0</span></div>
+        <div class="total-row grand-total"><span>Grand Total:</span><span id="grandTotal">₹0</span></div>
+      </div>
+      <input type="hidden" id="bkEditId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-outline" onclick="closeModal('bookingModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBooking()">Save Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ DATA STORES ============
+    let categories = [
+      { id: 'c1', name: 'Football Turf', description: 'Full size football turf with floodlights', pricePerHour: 1500, maxPlayers: 14 },
+      { id: 'c2', name: 'Cricket Pitch', description: 'Professional cricket pitch with nets', pricePerHour: 2000, maxPlayers: 22 },
+      { id: 'c3', name: 'Tennis Court', description: 'Synthetic tennis court', pricePerHour: 800, maxPlayers: 4 },
+      { id: 'c4', name: 'Basketball Court', description: 'Indoor basketball court', pricePerHour: 1000, maxPlayers: 10 }
+    ];
+
+    let products = [
+      { id: 'p1', name: 'Water Bottle', price: 20, stock: 200 },
+      { id: 'p2', name: 'Fresh Juice', price: 50, stock: 100 },
+      { id: 'p3', name: 'Energy Drink', price: 80, stock: 150 },
+      { id: 'p4', name: 'Football', price: 500, stock: 20 },
+      { id: 'p5', name: 'Cricket Bat', price: 300, stock: 15 },
+      { id: 'p6', name: 'Tennis Racket', price: 400, stock: 10 }
+    ];
+
+    let bookings = [
+      { id: 'b1', name: 'Rahul Sharma', mobile: '9876543210', categoryId: 'c1', hours: 2, pricePerHour: 1500, amount: 3000,
+        products: [{ productId: 'p1', qty: 2, price: 20 }, { productId: 'p2', qty: 1, price: 50 }],
+        productsTotal: 90, grandTotal: 3090, paymentMethod: 'upi', paymentStatus: 'done',
+        start: '2026-04-25T09:00', end: '2026-04-25T11:00' },
+      { id: 'b2', name: 'Priya Patel', mobile: '9876543211', categoryId: 'c2', hours: 3, pricePerHour: 2000, amount: 6000,
+        products: [], productsTotal: 0, grandTotal: 6000, paymentMethod: 'cash', paymentStatus: 'pending',
+        start: '2026-04-25T14:00', end: '2026-04-25T17:00' },
+      { id: 'b3', name: 'Amit Kumar', mobile: '9876543212', categoryId: 'c1', hours: 1, pricePerHour: 1500, amount: 1500,
+        products: [{ productId: 'p5', qty: 1, price: 300 }], productsTotal: 300, grandTotal: 1800,
+        paymentMethod: 'advance', paymentStatus: 'advance', start: '2026-04-24T10:00', end: '2026-04-24T11:00' },
+      { id: 'b4', name: 'Sneha Reddy', mobile: '9876543213', categoryId: 'c3', hours: 2, pricePerHour: 800, amount: 1600,
+        products: [{ productId: 'p6', qty: 2, price: 400 }], productsTotal: 800, grandTotal: 2400,
+        paymentMethod: 'upi', paymentStatus: 'done', start: '2026-04-26T08:00', end: '2026-04-26T10:00' }
+    ];
+
+    let currentUser = null;
+    let currentView = 'dashboard';
+    let countdownInterval = null;
+
+    // ============ HELPERS ============
+    function getCat(id) { return categories.find(c => c.id === id) || { name: 'Unknown', pricePerHour: 0 }; }
+    function getProd(id) { return products.find(p => p.id === id) || { name: 'Unknown', price: 0 }; }
+    function isCompleted(b) { return new Date(b.end) < new Date(); }
+    
+    function getCountdown(b) {
+      const diff = new Date(b.end) - new Date();
+      if (diff <= 0) return { expired: true, display: 'EXPIRED' };
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return { expired: false, display: h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`, seconds: diff / 1000 };
+    }
+
+    function getCountdownClass(b) {
+      if (isCompleted(b)) return 'countdown-expired';
+      const cd = getCountdown(b);
+      if (cd.seconds < 1800) return 'countdown-warning';
+      return 'countdown-active';
+    }
+
+    function fmtDt(iso) { return iso ? new Date(iso).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : ''; }
+    function esc(t) { return String(t).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m]); }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar:not([style*="display: none"])');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+      }
+    }
+
+    // ============ LOGIN ============
+    function selectRole(role) {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('adminPasswordGroup').style.display = role === 'admin' ? 'block' : 'none';
+    }
+
+    function login() {
+      const mobile = document.getElementById('loginMobile').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const role = document.querySelector('.role-btn.active').textContent.toLowerCase();
+
+      if (!mobile) return alert('Enter mobile number');
+
+      if (role === 'admin') {
+        if (password === 'admin') {
+          currentUser = { role: 'admin', mobile };
+          showAdminUI();
+        } else {
+          alert('Invalid admin password! Use "admin"');
+        }
+      } else {
+        currentUser = { role: 'customer', mobile };
+        showCustomerUI();
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      if (countdownInterval) clearInterval(countdownInterval);
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('adminSidebar').style.display = 'none';
+      document.getElementById('customerSidebar').style.display = 'none';
+      document.getElementById('mainPanel').innerHTML = '';
+      document.getElementById('mobileMenuBtn').style.display = 'none';
+    }
+
+    function showAdminUI() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminSidebar').style.display = 'flex';
+      document.getElementById('customerSidebar').style.display = 'none';
+      document.getElementById('mobileMenuBtn').style.display = 'block';
+      initAdminNav();
+      renderDashboard();
+      startCountdownTimer();
+      closeMobileSidebar();
+    }
+
+    function showCustomerUI() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminSidebar').style.display = 'none';
+      document.getElementById('customerSidebar').style.display = 'flex';
+      document.getElementById('customerMobile').textContent = currentUser.mobile;
+      document.getElementById('mobileMenuBtn').style.display = 'block';
+      initCustomerNav();
+      renderMyBookings();
+      startCountdownTimer();
+      closeMobileSidebar();
+    }
+
+    function closeMobileSidebar() {
+      document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('active'));
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    // ============ NAVIGATION ============
+    function initAdminNav() {
+      document.querySelectorAll('#adminSidebar .nav-item').forEach(item => {
+        item.onclick = function() {
+          document.querySelectorAll('#adminSidebar .nav-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          currentView = this.dataset.view;
+          closeMobileSidebar();
+          switch(currentView) {
+            case 'dashboard': renderDashboard(); break;
+            case 'categories': renderCategories(); break;
+            case 'products': renderProducts(); break;
+            case 'bookings': renderAllBookings(); break;
+          }
+        };
+      });
+    }
+
+    function initCustomerNav() {
+      document.querySelectorAll('#customerSidebar .nav-item').forEach(item => {
+        item.onclick = function() {
+          document.querySelectorAll('#customerSidebar .nav-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          currentView = this.dataset.view;
+          closeMobileSidebar();
+          if (currentView === 'myBookings') renderMyBookings();
+          else if (currentView === 'newBooking') openCustomerBooking();
+        };
+      });
+    }
+
+    function startCountdownTimer() {
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        document.querySelectorAll('.countdown[data-booking-id]').forEach(el => {
+          const b = bookings.find(x => x.id === el.dataset.bookingId);
+          if (b) {
+            const cd = getCountdown(b);
+            el.className = `countdown ${getCountdownClass(b)}`;
+            el.innerHTML = `<i class="fas fa-hourglass-half"></i> ${cd.display}`;
+          }
+        });
+      }, 1000);
+    }
+
+    // ============ MODALS ============
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+
+    // Category Modal
+    function openCategoryModal(id = null) {
+      if (id) {
+        const c = categories.find(x => x.id === id);
+        document.getElementById('catName').value = c.name;
+        document.getElementById('catDesc').value = c.description;
+        document.getElementById('catPrice').value = c.pricePerHour;
+        document.getElementById('catPlayers').value = c.maxPlayers;
+        document.getElementById('catEditId').value = id;
+        document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+      } else {
+        document.getElementById('catName').value = '';
+        document.getElementById('catDesc').value = '';
+        document.getElementById('catPrice').value = 1000;
+        document.getElementById('catPlayers').value = 10;
+        document.getElementById('catEditId').value = '';
+        document.getElementById('categoryModalTitle').textContent = 'Add Category';
+      }
+      openModal('categoryModal');
+    }
+
+    function saveCategory() {
+      const name = document.getElementById('catName').value.trim();
+      if (!name) return alert('Enter name');
+      const data = {
+        id: document.getElementById('catEditId').value || 'c' + Date.now(),
+        name,
+        description: document.getElementById('catDesc').value,
+        pricePerHour: parseInt(document.getElementById('catPrice').value) || 0,
+        maxPlayers: parseInt(document.getElementById('catPlayers').value) || 1
+      };
+      const idx = categories.findIndex(c => c.id === data.id);
+      if (idx >= 0) categories[idx] = data;
+      else categories.push(data);
+      closeModal('categoryModal');
+      refreshCurrentView();
+    }
+
+    // Product Modal
+    function openProductModal(id = null) {
+      if (id) {
+        const p = products.find(x => x.id === id);
+        document.getElementById('prodName').value = p.name;
+        document.getElementById('prodPrice').value = p.price;
+        document.getElementById('prodStock').value = p.stock;
+        document.getElementById('prodEditId').value = id;
+        document.getElementById('productModalTitle').textContent = 'Edit Product';
+      } else {
+        document.getElementById('prodName').value = '';
+        document.getElementById('prodPrice').value = 50;
+        document.getElementById('prodStock').value = 100;
+        document.getElementById('prodEditId').value = '';
+        document.getElementById('productModalTitle').textContent = 'Add Product';
+      }
+      openModal('productModal');
+    }
+
+    function saveProduct() {
+      const name = document.getElementById('prodName').value.trim();
+      if (!name) return alert('Enter name');
+      const data = {
+        id: document.getElementById('prodEditId').value || 'p' + Date.now(),
+        name,
+        price: parseInt(document.getElementById('prodPrice').value) || 0,
+        stock: parseInt(document.getElementById('prodStock').value) || 0
+      };
+      const idx = products.findIndex(p => p.id === data.id);
+      if (idx >= 0) products[idx] = data;
+      else products.push(data);
+      closeModal('productModal');
+      refreshCurrentView();
+    }
+
+    // ============ BOOKING PRODUCTS ============
+    function addProductRow(prodId = '', qty = 1) {
+      const div = document.createElement('div');
+      div.className = 'product-item';
+      div.innerHTML = `
+        <select class="form-control" style="flex:2;min-width:150px;" onchange="updateProductPrice(this)">
+          <option value="">Select product</option>
+          ${products.map(p => `<option value="${p.id}" data-price="${p.price}" ${prodId === p.id ? 'selected' : ''}>${esc(p.name)} - ₹${p.price}</option>`).join('')}
+        </select>
+        <input type="number" class="form-control" style="flex:1;min-width:70px;" value="${qty}" min="1" placeholder="Qty" onchange="calculateTotal()">
+        <span class="product-subtotal" style="min-width:60px;font-weight:600;">₹0</span>
+        <i class="fas fa-times" style="color:#ef4444;cursor:pointer;font-size:1.2rem;" onclick="this.parentElement.remove();calculateTotal();"></i>
+      `;
+      document.getElementById('productsList').appendChild(div);
+      if (prodId) updateProductPrice(div.querySelector('select'));
+      calculateTotal();
+    }
+
+    function updateProductPrice(sel) {
+      const opt = sel.selectedOptions[0];
+      const subtotal = sel.parentElement.querySelector('.product-subtotal');
+      if (opt && opt.value) {
+        const price = parseInt(opt.dataset.price);
+        const qty = parseInt(sel.parentElement.querySelector('input').value) || 0;
+        subtotal.textContent = '₹' + (price * qty);
+      } else {
+        subtotal.textContent = '₹0';
+      }
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const hours = parseFloat(document.getElementById('bkHours')?.value) || 0;
+      const priceHr = parseFloat(document.getElementById('bkPriceHr')?.value) || 0;
+      const turfTotal = hours * priceHr;
+      
+      let productsTotal = 0;
+      document.querySelectorAll('#productsList .product-item').forEach(item => {
+        const sel = item.querySelector('select');
+        const qty = parseInt(item.querySelector('input').value) || 0;
+        if (sel && sel.selectedOptions[0] && sel.value) {
+          productsTotal += (parseInt(sel.selectedOptions[0].dataset.price) || 0) * qty;
+        }
+      });
+
+      document.getElementById('turfTotal').textContent = '₹' + turfTotal.toLocaleString();
+      document.getElementById('productsTotal').textContent = '₹' + productsTotal.toLocaleString();
+      document.getElementById('grandTotal').textContent = '₹' + (turfTotal + productsTotal).toLocaleString();
+    }
+
+    function onBookingCategoryChange() {
+      const catId = document.getElementById('bkCategory').value;
+      const cat = getCat(catId);
+      document.getElementById('bkPriceHr').value = cat.pricePerHour;
+      calculateTotal();
+    }
+
+    function getBookingProducts() {
+      const prods = [];
+      document.querySelectorAll('#productsList .product-item').forEach(item => {
+        const sel = item.querySelector('select');
+        const qty = parseInt(item.querySelector('input').value) || 0;
+        if (sel && sel.value && qty > 0) {
+          prods.push({
+            productId: sel.value,
+            qty,
+            price: parseInt(sel.selectedOptions[0].dataset.price)
+          });
+        }
+      });
+      return prods;
+    }
+
+    // ============ BOOKING MODAL ============
+    function openBookingModal(b = null) {
+      document.getElementById('productsList').innerHTML = '';
+      document.getElementById('bkEditId').value = '';
+      
+      const catSel = document.getElementById('bkCategory');
+      catSel.innerHTML = '<option value="">Select category</option>';
+      categories.forEach(c => catSel.innerHTML += `<option value="${c.id}">${esc(c.name)} - ₹${c.pricePerHour}/hr</option>`);
+
+      if (b) {
+        document.getElementById('bookingModalTitle').textContent = 'Edit Booking';
+        document.getElementById('bkName').value = b.name;
+        document.getElementById('bkMobile').value = b.mobile;
+        document.getElementById('bkCategory').value = b.categoryId;
+        document.getElementById('bkHours').value = b.hours;
+        document.getElementById('bkPriceHr').value = b.pricePerHour;
+        document.getElementById('bkStart').value = b.start;
+        document.getElementById('bkEnd').value = b.end;
+        document.getElementById('bkPaymentMethod').value = b.paymentMethod;
+        document.getElementById('bkPaymentStatus').value = b.paymentStatus;
+        document.getElementById('bkEditId').value = b.id;
+        
+        b.products.forEach(p => addProductRow(p.productId, p.qty));
+      } else {
+        document.getElementById('bookingModalTitle').textContent = 'New Booking';
+        document.getElementById('bkName').value = '';
+        document.getElementById('bkMobile').value = currentUser?.mobile || '';
+        document.getElementById('bkCategory').value = '';
+        document.getElementById('bkHours').value = 1;
+        document.getElementById('bkPriceHr').value = 0;
+        document.getElementById('bkStart').value = '';
+        document.getElementById('bkEnd').value = '';
+        document.getElementById('bkPaymentMethod').value = 'pending';
+        document.getElementById('bkPaymentStatus').value = 'pending';
+      }
+      calculateTotal();
+      openModal('bookingModal');
+    }
+
+    function openCustomerBooking() {
+      openBookingModal();
+      document.getElementById('bkMobile').value = currentUser.mobile;
+    }
+
+    function saveBooking() {
+      const name = document.getElementById('bkName').value.trim();
+      const mobile = document.getElementById('bkMobile').value.trim();
+      const categoryId = document.getElementById('bkCategory').value;
+      const hours = parseFloat(document.getElementById('bkHours').value);
+      const pricePerHour = parseFloat(document.getElementById('bkPriceHr').value);
+      const amount = hours * pricePerHour;
+      const productsData = getBookingProducts();
+      const productsTotal = productsData.reduce((s, p) => s + (p.price * p.qty), 0);
+      const grandTotal = amount + productsTotal;
+      const start = document.getElementById('bkStart').value;
+      const end = document.getElementById('bkEnd').value;
+      const paymentMethod = document.getElementById('bkPaymentMethod').value;
+      const paymentStatus = document.getElementById('bkPaymentStatus').value;
+      const editId = document.getElementById('bkEditId').value;
+
+      if (!name || !mobile || !categoryId || !start || !end) return alert('Fill all required fields');
+      if (new Date(start) >= new Date(end)) return alert('End time must be after start');
+
+      const data = { id: editId || 'b' + Date.now(), name, mobile, categoryId, hours, pricePerHour, amount,
+        products: productsData, productsTotal, grandTotal, paymentMethod, paymentStatus, start, end };
+
+      if (editId) {
+        const idx = bookings.findIndex(x => x.id === editId);
+        if (idx >= 0) bookings[idx] = data;
+      } else {
+        bookings.push(data);
+      }
+      closeModal('bookingModal');
+      refreshCurrentView();
+    }
+
+    function updatePaymentStatus(id, status) {
+      const b = bookings.find(x => x.id === id);
+      if (b) b.paymentStatus = status;
+      refreshCurrentView();
+    }
+
+    // ============ RENDER FUNCTIONS ============
+    function refreshCurrentView() {
+      if (currentUser?.role === 'admin') {
+        switch(currentView) {
+          case 'dashboard': renderDashboard(); break;
+          case 'categories': renderCategories(); break;
+          case 'products': renderProducts(); break;
+          case 'bookings': renderAllBookings(); break;
+        }
+      } else {
+        if (currentView === 'myBookings') renderMyBookings();
+      }
+    }
+
+    function renderDashboard() {
+      const today = new Date().toISOString().split('T')[0];
+      const todayBks = bookings.filter(b => b.start.startsWith(today));
+      const activeBks = bookings.filter(b => !isCompleted(b));
+      const totalRev = bookings.reduce((s, b) => s + b.grandTotal, 0);
+      
+      document.getElementById('mainPanel').innerHTML = `
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <div class="stat-info"><h3>Today's Revenue</h3><div class="number">₹${todayBks.reduce((s,b)=>s+b.grandTotal,0).toLocaleString()}</div><small>${todayBks.length} bookings</small></div>
+            <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info"><h3>Total Revenue</h3><div class="number">₹${totalRev.toLocaleString()}</div><small>All time</small></div>
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info"><h3>Active</h3><div class="number">${activeBks.length}</div><small>${bookings.length} total</small></div>
+            <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info"><h3>Categories</h3><div class="number">${categories.length}</div><small>${products.length} products</small></div>
+            <div class="stat-icon"><i class="fas fa-tags"></i></div>
+          </div>
+        </div>
+        <div class="section-header"><h2><i class="far fa-clock"></i> Active Bookings</h2><button class="btn btn-primary" onclick="openBookingModal()"><i class="fas fa-plus"></i> New Booking</button></div>
+        ${generateBookingTable(activeBks.slice(0, 10))}
+      `;
+    }
+
+    function renderCategories() {
+      document.getElementById('mainPanel').innerHTML = `
+        <div class="section-card">
+          <div class="section-header"><h2><i class="fas fa-tags"></i> Turf Categories</h2><button class="btn btn-success" onclick="openCategoryModal()"><i class="fas fa-plus"></i> Add</button></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;">
+            ${categories.map(c => `
+              <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:20px;transition:0.3s;" onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <h4 style="margin-bottom:8px;">${esc(c.name)}</h4>
+                <p style="color:#64748b;font-size:0.85rem;margin-bottom:8px;">${esc(c.description)}</p>
+                <div style="color:#059669;font-weight:700;font-size:1.1rem;">₹${c.pricePerHour}/hr</div>
+                <div style="color:#64748b;font-size:0.8rem;">Max ${c.maxPlayers} players</div>
+                <div style="margin-top:12px;display:flex;gap:12px;">
+                  <button class="btn btn-sm btn-outline" onclick="openCategoryModal('${c.id}')"><i class="fas fa-edit"></i></button>
+                  <button class="btn btn-sm btn-danger" onclick="if(confirm('Delete this category?')){categories=categories.filter(x=>x.id!='${c.id}');refreshCurrentView();}"><i class="fas fa-trash-alt"></i></button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProducts() {
+      document.getElementById('mainPanel').innerHTML = `
+        <div class="section-card">
+          <div class="section-header"><h2><i class="fas fa-shopping-basket"></i> Additional Products</h2><button class="btn btn-success" onclick="openProductModal()"><i class="fas fa-plus"></i> Add</button></div>
+          <div class="booking-table-wrapper">
+            <table>
+              <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${products.map(p => `
+                  <tr>
+                    <td><strong>${esc(p.name)}</strong></td>
+                    <td>₹${p.price}</td>
+                    <td>${p.stock} units</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline" onclick="openProductModal('${p.id}')"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-sm btn-danger" style="margin-left:8px;" onclick="if(confirm('Delete?')){products=products.filter(x=>x.id!='${p.id}');refreshCurrentView();}"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAllBookings() {
+      document.getElementById('mainPanel').innerHTML = `
+        <div class="section-header"><h2><i class="fas fa-list-alt"></i> All Bookings</h2><button class="btn btn-primary" onclick="openBookingModal()"><i class="fas fa-plus"></i> New</button></div>
+        ${generateBookingTable(bookings)}
+      `;
+    }
+
+    function renderMyBookings() {
+      const myBks = bookings.filter(b => b.mobile === currentUser.mobile);
+      document.getElementById('mainPanel').innerHTML = `
+        <div class="customer-header">
+          <h1><i class="fas fa-user-circle"></i> Welcome!</h1>
+          <p>Mobile: ${currentUser.mobile} | My Bookings: ${myBks.length}</p>
+        </div>
+        <div class="section-header"><h2><i class="fas fa-calendar-check"></i> My Bookings</h2><button class="btn btn-primary" onclick="openCustomerBooking()"><i class="fas fa-plus"></i> New Booking</button></div>
+        ${generateBookingTable(myBks, true)}
+      `;
+    }
+
+    function generateBookingTable(list, isCustomer = false) {
+      if (!list.length) return '<div class="section-card"><div style="padding:40px;text-align:center;color:#64748b;"><i class="fas fa-inbox" style="font-size:3rem;margin-bottom:16px;"></i><p>No bookings found</p></div></div>';
+      
+      return `<div class="booking-table-wrapper"><table><thead><tr>
+        <th>#</th><th>Customer</th><th>Mobile</th><th>Category</th><th>Hours</th><th>Amount</th>
+        <th>Products</th><th>Total</th><th>Payment</th><th>Status</th>
+        <th>Time</th><th>Countdown</th>${isCustomer ? '' : '<th>Actions</th>'}
+      </tr></thead><tbody>${list.map((b, i) => `
+        <tr style="${isCompleted(b) ? 'opacity:0.7;' : ''}">
+          <td>${i + 1}</td>
+          <td><strong>${esc(b.name)}</strong></td>
+          <td>${esc(b.mobile)}</td>
+          <td>${esc(getCat(b.categoryId).name)}</td>
+          <td>${b.hours}</td>
+          <td>₹${b.amount.toLocaleString()}</td>
+          <td>${b.products.length ? b.products.map(p => `${esc(getProd(p.productId).name)} ×${p.qty}`).join(', ') : '-'}<br><small>₹${b.productsTotal}</small></td>
+          <td><strong>₹${b.grandTotal.toLocaleString()}</strong></td>
+          <td><span style="background:#e2e8f0;padding:4px 8px;border-radius:8px;font-size:0.8rem;">${b.paymentMethod.toUpperCase()}</span></td>
+          <td>
+            <select class="payment-badge payment-${b.paymentStatus}" style="border:none;font-weight:700;padding:4px 8px;border-radius:20px;cursor:pointer;font-size:0.75rem;" 
+              onchange="updatePaymentStatus('${b.id}', this.value)" ${isCustomer ? 'disabled' : ''}>
+              <option value="pending" ${b.paymentStatus==='pending'?'selected':''}>Pending</option>
+              <option value="done" ${b.paymentStatus==='done'?'selected':''}>Done</option>
+              <option value="advance" ${b.paymentStatus==='advance'?'selected':''}>Advance</option>
+            </select>
+          </td>
+          <td style="font-size:0.85rem;">${fmtDt(b.start)}<br>${fmtDt(b.end)}</td>
+          <td><span class="countdown ${getCountdownClass(b)}" data-booking-id="${b.id}"><i class="fas fa-hourglass-half"></i> ${getCountdown(b).display}</span></td>
+          ${isCustomer ? '' : `<td>
+            <button class="btn btn-sm btn-outline" onclick="openBookingModal(bookings.find(x=>x.id==='${b.id}'))" style="margin-bottom:4px;"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="if(confirm('Delete?')){bookings=bookings.filter(x=>x.id!='${b.id}');refreshCurrentView();}"><i class="fas fa-trash-alt"></i></button>
+          </td>`}
+        </tr>
+      `).join('')}</tbody></table></div>`;
+    }
+
+    // Close modals on outside click
+    window.onclick = function(e) {
+      if (e.target.classList.contains('modal')) e.target.classList.remove('active');
+    };
+
+    // Initialize
+    document.getElementById('loginPassword').value = 'admin';
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        closeMobileSidebar();
+      }
+    });
+  </script>
+</body>
+</html>
